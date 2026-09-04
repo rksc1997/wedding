@@ -1,173 +1,240 @@
 # Rahul & Tanvi — wedding website
 
-A private, password-gated information site for our wedding in Kolkata,
-21–22 November 2026.
+A genuinely private information site for our wedding in Kolkata,
+21–22 November 2026, built to run on GitHub Pages.
 
-Plain HTML, CSS and JavaScript. No build step, no dependencies, no framework.
-Open `index.html` and it works.
+**Password: `RahulTanvi2026`** (case- and space-insensitive)
 
 ---
 
-## The password
+## Why the content is encrypted
 
-**Current password: `RahulTanvi2026`**
+GitHub Pages has no access control. On a free account Pages requires a
+**public** repo, and Pages sites are publicly reachable regardless of plan.
+So a password gate made of HTML/CSS/JS would be theatre — anyone could read
+`index.html` in the repo and see every venue and date.
 
-It is compared as a SHA-256 hash, so the password itself never appears in the
-source. Input is trimmed and lower-cased first, so `rahultanvi2026`,
-`RAHULTANVI2026` and `  RahulTanvi2026 ` all work — guests won't be locked out
-by autocapitalisation on a phone.
+This site therefore **encrypts the content instead of hiding it**:
 
-Once a guest gets in, the unlock is remembered in `localStorage`, so they only
-type it once per device.
+- `content.enc` — AES-256-GCM ciphertext of the markup and event details
+- `media.enc` — AES-256-GCM ciphertext of the photographs
+- The key is derived from the password with PBKDF2-HMAC-SHA256, 310,000
+  iterations, over a random 16-byte salt.
 
-### Changing it
+There is **no password hash stored anywhere**. A wrong password produces a
+wrong key, which fails GCM's authentication tag, so the browser cannot
+produce the plaintext at all. Reading the page source tells an attacker
+nothing, because the source does not contain the content.
 
-Open the site, press F12 for the console, and run:
+Verified: no occurrence of *Tanvi*, *Kolkata*, *Akshardham*, *Joka*,
+*Westside*, *Mehendi*, *Haldi*, *Sangeet* or *November* survives in any
+published file, and `media.enc` contains no JPEG header bytes.
 
-```js
-crypto.subtle.digest('SHA-256', new TextEncoder().encode('yournewpassword'))
-  .then(b => console.log([...new Uint8Array(b)]
-    .map(x => x.toString(16).padStart(2, '0')).join('')))
-```
+### What this does and doesn't protect against
 
-Paste the result into `passwordHash` in `js/config.js`. Use a lower-case
-password so the trim-and-lower-case behaviour matches.
+It genuinely protects against: someone finding the URL, someone reading the
+repo, search engines, and link-forwarding to people who don't have the
+password.
 
-### What this gate is and isn't
+It does **not** protect against: a guest who has the password sharing it, or
+sharing what they saw. One password covers everyone, so you cannot revoke a
+single guest — you change the password and rebuild. That is the normal
+trade-off for a shared-password site.
 
-It keeps the site out of search engines and away from casual visitors. It is
-**not** real security: the page content is in the HTML, so someone determined
-enough to read the page source could get past it. That is the accepted
-trade-off of a free static site, and it is normal for wedding websites.
-
-If you ever want a genuine gate, the upgrade path is to put the site behind
-Netlify's site-wide password (a paid feature, ~$19/mo) or Vercel Pro's
-password protection. No code changes needed — the file layout already suits it.
+The password is the whole of the security. `RahulTanvi2026` is fine against
+casual snooping; 310k PBKDF2 iterations make bulk guessing slow. If you want
+it genuinely strong, use three or four unrelated words.
 
 ---
 
 ## Editing the content
 
-**Almost everything you'll want to change is in `js/config.js`.** Names, the
-password hash, the countdown date, all five events, and the RSVP settings.
-You shouldn't need to touch the HTML for routine updates.
+Everything editable lives in `src/`, which is **gitignored and never
+published**:
+
+| File | What's in it |
+|---|---|
+| `src/config.json` | Event names, dates, venues, dress codes, RSVP settings |
+| `src/content.html` | All the prose — welcome note, travel cards, FAQ |
+| `src/images/` | The two original photographs |
+
+After any edit, rebuild and commit:
+
+```bash
+cd "C:/Users/rksc1/Dropbox/wedding-website" && python build.py && git add -A && git commit -m "Update details" && git push
+```
+
+`build.py` prompts for the password. It must be the same one each time, or
+guests' saved sessions break.
+
+> **`src/` is the only copy of the plaintext.** The `.enc` files cannot be
+> edited back into source. It lives in Dropbox, so it's backed up — but don't
+> delete it.
 
 ### Filling in Mehendi / Haldi / Sangeet
 
-Those three are currently marked `status: 'tba'`, which makes the card show a
-dashed border and a "Details to come" pill instead of a venue. When a venue is
-booked, edit that event in `js/config.js`:
+Those three are `"status": "tba"`, which renders a dashed card with a
+"Details to come" pill instead of a venue. When a venue is booked, edit that
+entry in `src/config.json`:
 
-```js
+```json
 {
-  name: 'Mehendi',
-  status: 'confirmed',                      // was 'tba'
-  dateLabel: 'Thursday, 19 November 2026',
-  time: '4:00 pm onwards',
-  venue: 'The venue name',
-  address: 'Street, Kolkata, West Bengal',
-  mapQuery: 'The venue name Kolkata',       // powers the "Open in Maps" link
-  dress: 'Bright, festive Indian wear',
-  blurb: '…'
+  "name": "Mehendi",
+  "status": "confirmed",
+  "dateLabel": "Thursday, 19 November 2026",
+  "time": "4:00 pm onwards",
+  "venue": "The venue name",
+  "address": "Street, Kolkata, West Bengal",
+  "mapQuery": "The venue name Kolkata",
+  "dress": "Bright, festive Indian wear",
+  "blurb": "…"
 }
 ```
 
-The card, the Google Maps link, and the RSVP checkbox for that event all update
-from this one edit.
-
-Longer prose — the welcome message, travel cards, FAQ answers — lives in
-`index.html` under clearly commented sections.
+The card, the Google Maps link, and that event's RSVP checkbox all update
+from this one edit. Then `python build.py` and push.
 
 ---
 
-## Receiving RSVPs
+## Connecting the RSVP form
 
-The form supports three backends. Pick one with `rsvp.mode` in `js/config.js`.
+The form is built and styled but **not yet connected** — it currently tells
+guests to email you instead. Pick one backend and set it in
+`src/config.json`.
 
-### `'netlify'` (default, free)
+### Google Forms — recommended
 
-Deploy to Netlify and it just works — Netlify detects the form at deploy time.
-Responses appear under **Site → Forms**, and you can set email notifications
-there. Nothing to configure.
+Free, unlimited responses, answers land in a Google Sheet, and it can email
+you on each submission. Best fit for a wedding.
 
-### `'formspree'` (free, works on any host)
+1. Build a Google Form with the questions you want.
+2. **Send → `<>` (embed)** and copy the `src="..."` URL.
+3. In `src/config.json`:
+   ```json
+   "rsvp": { "mode": "google", "googleFormEmbedUrl": "https://docs.google.com/forms/d/e/…/viewform?embedded=true" }
+   ```
 
-Create a form at [formspree.io](https://formspree.io), then set:
+The custom form is replaced by your Google Form. The form URL stays inside
+the encrypted payload.
 
-```js
-rsvp: { mode: 'formspree', formspreeEndpoint: 'https://formspree.io/f/abcdxyz' }
+### Formspree — keeps the custom-styled form
+
+Prettier, since it uses the site's own form design. **But the free tier is
+50 submissions per month**, which a wedding can exceed.
+
+1. Create a form at [formspree.io](https://formspree.io) and copy the endpoint.
+2. In `src/config.json`:
+   ```json
+   "rsvp": { "mode": "formspree", "formspreeEndpoint": "https://formspree.io/f/abcdxyz" }
+   ```
+
+Netlify Forms is not an option here — it only works on Netlify.
+
+---
+
+## Publishing to GitHub Pages
+
+The repo is already initialised and committed locally. To publish:
+
+**1. Create an empty repo on GitHub.** Name it whatever you like; the URL
+becomes `https://<username>.github.io/<repo>/`. The site uses only relative
+paths, so a sub-path works fine.
+
+**2. Push.** Replace the URL with yours:
+
+```bash
+cd "C:/Users/rksc1/Dropbox/wedding-website" && git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git && git branch -M main && git push -u origin main
 ```
 
-### `'google'` (a Google Form instead)
+**3. Enable Pages.** In the repo: **Settings → Pages → Source: Deploy from a
+branch → Branch: `main` / `(root)` → Save.** It goes live in a minute or two.
 
-Set `mode: 'google'` and paste your form's embed URL into
-`googleFormEmbedUrl`. The custom form is replaced by your Google Form in an
-iframe, and responses land in a Google Sheet.
+**4. Check it.** Open the URL, confirm the gate appears, and confirm the
+password works.
 
-**Note:** the form cannot submit from a `file://` preview — there is nothing to
-POST to. It detects this and says so rather than failing silently. Deploy, or
-serve locally, to test it end to end.
+### A note on repo visibility
+
+On a free GitHub account, Pages needs a **public** repo. That's acceptable
+here precisely because everything sensitive is ciphertext — but it does mean
+the ciphertext is world-readable and archivable. If you have GitHub Pro, a
+private repo also works and is marginally tidier.
+
+### The `src/` safeguard
+
+Committing `src/` even once would put the plaintext in public git history
+permanently, where deleting it later doesn't help. Two things prevent that:
+
+- `.gitignore` excludes `src/`
+- a `pre-commit` hook in `.git/hooks/` **hard-blocks** any commit containing
+  `src/`, including one forced in with `git add -f`
+
+The hook lives in `.git/`, so it does not travel with a clone. If you ever
+re-clone this repo, copy it across.
+
+`.gitattributes` marks `*.enc` as binary. Without it Git could decide
+`media.enc` is text and apply CRLF conversion, silently corrupting the
+ciphertext so it no longer decrypts.
 
 ---
 
 ## Previewing locally
 
 ```bash
-python -m http.server 8778 --directory "C:/Users/rksc1/Dropbox/wedding-website"
+python -m http.server 8779 --directory "C:/Users/rksc1/Dropbox/wedding-website"
 ```
 
-Then open <http://localhost:8778>. Use a local server rather than
-double-clicking `index.html` — the browser's `crypto.subtle` API is only
-available in a secure context, and while there is a pure-JS SHA-256 fallback
-for `file://`, the RSVP form still won't submit.
+Then <http://localhost:8779>. You must use a server, not double-click
+`index.html` — WebCrypto only works in a secure context (HTTPS or
+localhost), and the gate says so plainly if you try.
 
 ---
 
-## Deploying
+## Changing the password
 
-Any static host works. The whole folder is the site.
+Just rebuild with the new one:
 
-**Netlify** (easiest, and the RSVP default assumes it) — go to
-[app.netlify.com/drop](https://app.netlify.com/drop) and drag the
-`wedding-website` folder onto the page. You get a URL immediately. Then rename
-the site to something tidy under Site settings, and point a custom domain at it
-if you buy one.
+```bash
+cd "C:/Users/rksc1/Dropbox/wedding-website" && python build.py && git add -A && git commit -m "Rotate password" && git push
+```
 
-**Cloudflare Pages / Vercel / GitHub Pages** all work the same way. If you use
-GitHub Pages, make the repository **private** — otherwise the source, and with
-it the site content, is public.
-
-`netlify.toml` is included and sets `X-Robots-Tag: noindex` plus sensible cache
-headers. `robots.txt` and a `noindex` meta tag also ask search engines to stay
-away. Harmless on other hosts.
+New salt, new IVs, new ciphertext. Anyone with the old password is locked
+out immediately, and guests with a cached session are asked to re-enter it.
+Update the password on your e-invites to match.
 
 ---
 
 ## Files
 
 ```
-index.html          all page content and structure
-css/styles.css      all styling; palette variables at the top
-js/config.js        ← edit this for details, password, RSVP
-js/main.js          gate, countdown, event rendering, FAQ, RSVP
-images/
-  engagement.jpeg   hero background
-  selfie.jpeg       gate background + welcome section
-netlify.toml        deploy + security headers
-robots.txt          keeps search engines out
-.claude/launch.json lets Claude Code preview the site from this folder
+index.html          public shell: the gate, and nothing else
+content.enc         encrypted config + markup      (~25 KB)
+media.enc           encrypted photographs          (~440 KB)
+css/styles.css      all styling; palette at the top
+js/gate.js          password -> PBKDF2 -> AES-GCM -> inject
+js/app.js           countdown, event cards, FAQ, nav, RSVP
+build.py            src/ -> content.enc + media.enc
+robots.txt          asks crawlers to stay out
+.nojekyll           serve the folder verbatim, no Jekyll
+.gitattributes      *.enc is binary — do not touch line endings
+.gitignore          excludes src/
+src/                PLAINTEXT — never published
 ```
 
-## Notes on how it's built
+## How it behaves
 
+- **Two-stage load.** Only 25 KB has to decrypt before the page appears, so
+  the gate opens in well under a second. The 440 KB of photographs decrypts
+  behind the rendered page and fades in. Measured: unlock at ~770 ms
+  including all 310k PBKDF2 iterations.
+- **Photographs never touch the network in the clear.** They're decrypted to
+  Blob URLs in the browser.
+- **The key, not the password, is cached** — in `sessionStorage`, so a
+  reload is instant but closing the tab forgets it.
+- **Fail-open rendering.** The fade-in animation only applies once JS has
+  added a `js` class, with a 2.5s fallback, so a script problem can't leave a
+  guest on a blank page. If `media.enc` fails to load, the text still reads
+  fine and the image placeholders simply reveal.
 - **Colours** are taken from the photographs — marigold, gerbera pink,
-  sherwani indigo, cream. They're CSS variables at the top of `styles.css`.
-- **The reveal animation is fail-open.** The fade-in only applies when an
-  inline script has added a `js` class to `<html>`, and there's a 2.5s
-  fallback that reveals everything if the observer never fires. A JavaScript
-  problem can never leave a guest looking at a blank page.
-- **Accessible and responsive**: keyboard-navigable, labelled form fields,
-  `aria-expanded` on the accordion and menu, and it respects
-  `prefers-reduced-motion`.
-- **Printable**: the events and travel details print cleanly, so anyone who
-  wants a paper copy can hit Ctrl-P.
+  sherwani indigo, cream.
+- Responsive, keyboard-navigable, respects `prefers-reduced-motion`, and the
+  details print cleanly.
