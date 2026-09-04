@@ -72,10 +72,10 @@
 
   /* --------------------------------------------------------------- crypto */
 
-  /* Lower-case and drop everything that isn't a letter or digit, so
-     "marigold-tram-lantern", "Marigold Tram Lantern" and
-     "marigoldtramlantern" all derive the same key. Phone autocapitalisation
-     and guesses at the separator stop mattering.
+  /* Lower-case and drop everything that isn't a letter or digit, so for an
+     example passphrase "alpha-bravo-charlie", all of "Alpha Bravo Charlie",
+     "alphabravocharlie" and "ALPHA_BRAVO_CHARLIE" derive the same key.
+     Phone autocapitalisation and guesses at the separator stop mattering.
 
      build.py normalises identically. Change one and you must change the
      other, or nothing will decrypt. */
@@ -178,7 +178,12 @@
     var doc = JSON.parse(new TextDecoder().decode(plainBuf));
 
     siteEl.innerHTML = doc.html;
-    document.title = 'Rahul & Tanvi — 21 November 2026, Kolkata';
+
+    /* The real title comes from the encrypted config. Hardcoding it here
+       would publish the names, date and city in a public file. */
+    if (doc.config && doc.config.pageTitle) {
+      document.title = doc.config.pageTitle;
+    }
 
     /* app.js owns everything from here: countdown, event cards, FAQ,
        reveal-on-scroll, nav and the RSVP form. */

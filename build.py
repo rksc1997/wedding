@@ -69,8 +69,11 @@ IMAGES = {
 def normalise(password: str) -> str:
     """Lower-case and drop everything that isn't a letter or digit.
 
-    A guest sent "marigold-tram-lantern" will type it with spaces, without
-    separators, or with a capital M, and every one of those should work.
+    A guest sent a hyphenated passphrase will type it with spaces, without
+    separators, or with capitals, and every one of those should work. So for
+    an example passphrase "alpha-bravo-charlie", all of "Alpha Bravo Charlie",
+    "alphabravocharlie" and "ALPHA_BRAVO_CHARLIE" derive the same key.
+
     Stripping separators costs no meaningful entropy — the words carry it —
     and removes the single most likely reason a guest can't get in.
 

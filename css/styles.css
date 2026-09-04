@@ -1,7 +1,9 @@
 /* ==========================================================================
-   Rahul & Tanvi — 21.11.2026
-   Palette pulled from the photographs: marigold, gerbera pink, sherwani
-   indigo, haldi yellow, cream.
+   Stylesheet for the gate and the decrypted page.
+
+   This file is public, so it deliberately names no people, dates or places.
+   The palette is sampled from the photographs: warm orange, deep pink, a
+   dark blue, and cream.
    ========================================================================== */
 
 :root {
@@ -15,7 +17,6 @@
   --marigold-lt:  #F4B24C;
   --gerbera:      #C51F5D;
   --gerbera-lt:   #E85C8A;
-  --haldi:        #F2C230;
   --leaf:         #4E6B4A;
   --rule:         rgba(36, 28, 26, 0.14);
 
