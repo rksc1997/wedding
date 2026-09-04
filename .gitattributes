@@ -1,0 +1,4 @@
+# The encrypted payloads must round-trip byte-for-byte. Without this, Git
+# could decide media.enc is text and apply CRLF conversion, silently
+# corrupting the ciphertext so it no longer decrypts.
+*.enc binary

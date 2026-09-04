@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R &amp; T</title>
+
+<!-- Deliberately says nothing. This file is public on GitHub Pages, so it
+     carries no names, dates, venues or photographs — all of that lives
+     encrypted in content.enc. -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1C2340">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Georgia,serif' fill='%23E4881C'>R</text></svg>">
+
+<script>document.documentElement.className += ' js';</script>
+</head>
+
+<body class="is-locked">
+
+<!-- ======================================================================
+     GATE — the only thing in this file. Everything else is decrypted from
+     content.enc into #site once the password checks out.
+     ====================================================================== -->
+<div id="gate" aria-labelledby="gate-title">
+  <div class="gate-card" id="gate-card">
+    <div class="monogram">R <em>&amp;</em> T</div>
+    <p class="gate-date">21 &middot; 11 &middot; 2026</p>
+
+    <h1 id="gate-title">You&rsquo;re invited</h1>
+    <p class="gate-hint" id="gate-hint">Please enter the password from your invitation.</p>
+
+    <form class="gate-form" id="gate-form" autocomplete="off">
+      <label for="gate-input" hidden>Password</label>
+      <input type="password" id="gate-input" name="password"
+             placeholder="Password" autocomplete="current-password"
+             autocapitalize="off" autocorrect="off" spellcheck="false" required>
+      <button type="submit" class="btn" id="gate-submit">Enter</button>
+      <p class="gate-error" id="gate-error" role="alert" aria-live="polite"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Decrypted content is injected here. -->
+<div id="site"></div>
+
+<script src="js/app.js"></script>
+<script src="js/gate.js"></script>
+</body>
+</html>

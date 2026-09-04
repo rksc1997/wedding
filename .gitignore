@@ -1,0 +1,15 @@
+# ---------------------------------------------------------------------------
+# The plaintext sources must NEVER be published. The repo is public on
+# GitHub Pages; only the encrypted payload (content.enc) belongs in it.
+#
+# src/ is the single copy of the editable content and it lives in Dropbox.
+# content.enc cannot be edited back into source, so do not delete src/.
+# ---------------------------------------------------------------------------
+src/
+
+# Local tooling
+.claude/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
