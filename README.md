@@ -3,7 +3,9 @@
 A genuinely private information site for our wedding in Kolkata,
 21–22 November 2026, built to run on GitHub Pages.
 
-**Password: `RahulTanvi2026`** (case- and space-insensitive)
+The guest password is **not recorded in this repository** — this README is
+public. It's in `src/PASSWORD.txt`, which is gitignored and stays on your
+machine (and in Dropbox). Passwords are case- and space-insensitive.
 
 ---
 
@@ -41,9 +43,10 @@ sharing what they saw. One password covers everyone, so you cannot revoke a
 single guest — you change the password and rebuild. That is the normal
 trade-off for a shared-password site.
 
-The password is the whole of the security. `RahulTanvi2026` is fine against
-casual snooping; 310k PBKDF2 iterations make bulk guessing slow. If you want
-it genuinely strong, use three or four unrelated words.
+The password is the whole of the security, so never put it anywhere public —
+including in this README, in commit messages, or in an issue. 310k PBKDF2
+iterations make bulk guessing slow, but a short or guessable password is
+still the weak link. Three or four unrelated words is ideal.
 
 ---
 
