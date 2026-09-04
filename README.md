@@ -5,7 +5,21 @@ A genuinely private information site for our wedding in Kolkata,
 
 The guest password is **not recorded in this repository** — this README is
 public. It's in `src/PASSWORD.txt`, which is gitignored and stays on your
-machine (and in Dropbox). Passwords are case- and space-insensitive.
+machine (and in Dropbox).
+
+Guests get a lot of latitude when typing it. The password is lower-cased and
+all non-alphanumeric characters are stripped before the key is derived, so
+for a passphrase like `marigold-tram-lantern` every one of these works:
+
+```
+marigold-tram-lantern    Marigold Tram Lantern    marigoldtramlantern
+MARIGOLD_TRAM_LANTERN      marigold - tram - lantern
+```
+
+That removes the most likely reason a guest can't get in — guessing the
+separator — at no meaningful cost, since the words carry the entropy. The
+transformation is defined identically in `build.py` and `js/gate.js`; if you
+change one you must change the other or nothing will decrypt.
 
 ---
 

@@ -72,10 +72,15 @@
 
   /* --------------------------------------------------------------- crypto */
 
-  /* Trim + lower-case so a phone's autocapitalisation doesn't lock a guest
-     out. build.py normalises identically before deriving the key. */
+  /* Lower-case and drop everything that isn't a letter or digit, so
+     "marigold-tram-lantern", "Marigold Tram Lantern" and
+     "marigoldtramlantern" all derive the same key. Phone autocapitalisation
+     and guesses at the separator stop mattering.
+
+     build.py normalises identically. Change one and you must change the
+     other, or nothing will decrypt. */
   function normalise(pw) {
-    return String(pw == null ? '' : pw).trim().toLowerCase();
+    return String(pw == null ? '' : pw).toLowerCase().replace(/[^a-z0-9]/g, '');
   }
 
   function deriveKey(password, saltBytes, iterations) {

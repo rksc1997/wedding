@@ -67,11 +67,17 @@ IMAGES = {
 
 
 def normalise(password: str) -> str:
-    """Trim and lower-case, so guests aren't defeated by phone autocapitals.
+    """Lower-case and drop everything that isn't a letter or digit.
+
+    A guest sent "marigold-tram-lantern" will type it with spaces, without
+    separators, or with a capital M, and every one of those should work.
+    Stripping separators costs no meaningful entropy — the words carry it —
+    and removes the single most likely reason a guest can't get in.
 
     js/gate.js applies the identical transformation before deriving the key.
+    Change one and you must change the other, or nothing will decrypt.
     """
-    return password.strip().lower()
+    return re.sub(r"[^a-z0-9]", "", password.lower())
 
 
 def strip_comments(html: str) -> str:
