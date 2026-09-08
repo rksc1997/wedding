@@ -1,14 +1,12 @@
 /* ==========================================================================
-   app.js — everything that happens after the content is decrypted.
-
-   Exposes window.SITE.init(config). gate.js calls it once, immediately after
-   injecting the markup into #site.
+   app.js — renders the event cards and RSVP checkboxes from js/config.js,
+   and wires up the nav, FAQ and RSVP form.
    ========================================================================== */
 
-window.SITE = (function () {
+(function () {
   'use strict';
 
-  var CFG = {};
+  var CFG = window.WEDDING_CONFIG || {};
 
   function esc(str) {
     return String(str == null ? '' : str)
@@ -16,48 +14,10 @@ window.SITE = (function () {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* ====================================================== countdown ===== */
-
-  var countdownTimer = null;
-
-  function renderCountdown() {
-    var el = document.getElementById('countdown');
-    if (!el || !CFG.weddingDate) return;
-
-    var target = new Date(CFG.weddingDate).getTime();
-    if (isNaN(target)) { el.innerHTML = ''; return; }
-
-    var diff = target - Date.now();
-    if (diff <= 0) {
-      el.innerHTML = '<p class="countdown-done">Today is the day.</p>';
-      if (countdownTimer) window.clearInterval(countdownTimer);
-      return;
-    }
-
-    var s = Math.floor(diff / 1000);
-    var units = [
-      { label: 'Days',    value: Math.floor(s / 86400) },
-      { label: 'Hours',   value: Math.floor(s % 86400 / 3600) },
-      { label: 'Minutes', value: Math.floor(s % 3600 / 60) },
-      { label: 'Seconds', value: s % 60 }
-    ];
-
-    el.innerHTML = units.map(function (u) {
-      return '<div class="countdown-unit"><b>' + u.value +
-             '</b><span>' + u.label + '</span></div>';
-    }).join('');
-  }
-
-  function startCountdown() {
-    renderCountdown();
-    if (!countdownTimer) countdownTimer = window.setInterval(renderCountdown, 1000);
-  }
-
   /* ========================================================= events ===== */
 
   var ICON = {
     pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.6-7-10a7 7 0 0 1 14 0c0 5.4-7 10-7 10Z"/><circle cx="12" cy="11" r="2.5"/></svg>',
-    shirt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 5.5 5.5 10 8 9v11h8V9l2.5 1L20 5.5 16 3a4 4 0 0 1-8 0Z"/></svg>',
     clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
     ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>'
   };
@@ -77,7 +37,6 @@ window.SITE = (function () {
         '<div class="event-when">' +
           '<h3 class="event-name">' + esc(ev.name) + '</h3>' +
           '<p class="event-date">' + esc(ev.dateLabel) + '</p>' +
-          (ev.time ? '<p class="event-time">' + esc(ev.time) + '</p>' : '') +
         '</div>';
 
       var rows = '';
@@ -95,26 +54,15 @@ window.SITE = (function () {
           rows += '<p class="event-detail">' + ICON.clock +
                   '<span>' + esc(ev.time) + '</span></p>';
         }
+        if (ev.mapQuery) {
+          rows += '<a class="event-map" target="_blank" rel="noopener noreferrer" href="' +
+                  'https://www.google.com/maps/search/?api=1&query=' +
+                  encodeURIComponent(ev.mapQuery) + '">Open in Maps ' + ICON.ext + '</a>';
+        }
       }
 
-      if (ev.dress) {
-        rows += '<p class="event-detail">' + ICON.shirt +
-                '<span>' + esc(ev.dress) + '</span></p>';
-      }
-
-      if (!isTba && ev.mapQuery) {
-        rows += '<a class="event-map" target="_blank" rel="noopener noreferrer" href="' +
-                'https://www.google.com/maps/search/?api=1&query=' +
-                encodeURIComponent(ev.mapQuery) + '">Open in Maps ' + ICON.ext + '</a>';
-      }
-
-      var what =
-        '<div class="event-what">' +
-          (ev.blurb ? '<p class="event-blurb">' + esc(ev.blurb) + '</p>' : '') +
-          rows +
-        '</div>';
-
-      return '<article class="' + cls + '">' + when + what + '</article>';
+      return '<article class="' + cls + '">' + when +
+             '<div class="event-what">' + rows + '</div></article>';
     }).join('');
   }
 
@@ -124,7 +72,7 @@ window.SITE = (function () {
 
     host.innerHTML = CFG.events.map(function (ev) {
       var sub = ev.status === 'tba'
-        ? 'Date and venue to be confirmed'
+        ? 'Details to come'
         : ev.dateLabel + (ev.venue ? ' · ' + ev.venue : '');
       return '<label class="check">' +
                '<input type="checkbox" name="events" value="' + esc(ev.name) + '">' +
@@ -219,12 +167,15 @@ window.SITE = (function () {
     var rsvp   = CFG.rsvp || {};
     var email  = CFG.contactEmail || '';
 
-    var deadlineEl = document.getElementById('rsvp-deadline');
-    if (deadlineEl && rsvp.deadline) deadlineEl.textContent = rsvp.deadline;
+    /* Only show the deadline sentence once there is a deadline. */
+    if (rsvp.deadline) {
+      var line = document.getElementById('rsvp-deadline-line');
+      document.getElementById('rsvp-deadline').textContent = rsvp.deadline;
+      if (line) line.hidden = false;
+    }
 
     if (!form) return;
 
-    /* Google Form mode: replace the custom form with the embed. */
     if (rsvp.mode === 'google' && rsvp.googleFormEmbedUrl) {
       var wrapper = document.getElementById('rsvp-google');
       var frame   = document.getElementById('rsvp-google-frame');
@@ -286,31 +237,20 @@ window.SITE = (function () {
     });
   }
 
-  /* ======================================================== text bits === */
+  /* =========================================================== init ===== */
 
-  function applyText() {
-    var tag = (CFG.couple && CFG.couple.hashtag) || '';
-    if (tag) {
-      ['footer-hashtag', 'faq-hashtag'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = tag;
-      });
-    }
+  function init() {
+    renderEvents();
+    renderRsvpEvents();
+    initNav();
+    initFaq();
+    initRsvp();
+    initReveal();
   }
 
-  /* =========================================================== public === */
-
-  return {
-    init: function (config) {
-      CFG = config || {};
-      applyText();
-      renderEvents();
-      renderRsvpEvents();
-      initNav();
-      initFaq();
-      initRsvp();
-      initReveal();
-      startCountdown();
-    }
-  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
