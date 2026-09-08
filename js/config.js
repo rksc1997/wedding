@@ -80,5 +80,5 @@ window.WEDDING_CONFIG = {
     deadline: ''
   },
 
-  contactEmail: 'rahulschauhan@uchicago.edu'
+  contactEmail: 'tanvijindal98@gmail.com'
 };
