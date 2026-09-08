@@ -84,7 +84,7 @@ window.WEDDING_CONFIG = {
      -------------------------------------------------------------------- */
   rsvp: {
     mode: 'google',
-    googleFormEmbedUrl: '',
+    googleFormEmbedUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeFG-dbkrMMOEVn_EWrfSDIdWS9OCea6BfhYODPOWdEdu7HWw/viewform?embedded=true',
     formspreeEndpoint: 'https://formspree.io/f/YOUR_FORM_ID',
     deadline: ''
   },
