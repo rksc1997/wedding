@@ -176,18 +176,38 @@
 
     if (!form) return;
 
-    if (rsvp.mode === 'google' && rsvp.googleFormEmbedUrl) {
-      var wrapper = document.getElementById('rsvp-google');
-      var frame   = document.getElementById('rsvp-google-frame');
-      form.hidden = true;
-      wrapper.hidden = false;
-      frame.src = rsvp.googleFormEmbedUrl;
-      return;
-    }
-
     function say(msg, kind) {
       status.textContent = msg;
       status.className = 'form-status' + (kind ? ' is-' + kind : '');
+    }
+
+    /* --- Google Form mode -------------------------------------------------
+       Replace this site's form with the embedded Google Form. Guests fill in
+       Google's form; responses go straight to the linked spreadsheet.
+       tools/create-rsvp-form.gs builds a matching form and prints the URL. */
+    if (rsvp.mode === 'google') {
+      if (rsvp.googleFormEmbedUrl) {
+        var wrapper = document.getElementById('rsvp-google');
+        var frame   = document.getElementById('rsvp-google-frame');
+        form.hidden = true;
+        wrapper.hidden = false;
+        /* Google needs ?embedded=true to drop its own page chrome. Add it if
+           the pasted URL is missing it, rather than rendering a fat iframe. */
+        var url = rsvp.googleFormEmbedUrl;
+        if (url.indexOf('embedded=true') === -1) {
+          url += (url.indexOf('?') === -1 ? '?' : '&') + 'embedded=true';
+        }
+        frame.src = url;
+        return;
+      }
+      /* mode is 'google' but no URL yet — say so honestly instead of
+         silently falling through to a different backend. */
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        say('The RSVP form isn’t connected yet. Please email ' + email +
+            ' and we’ll add you.', 'error');
+      });
+      return;
     }
 
     var endpoint = rsvp.formspreeEndpoint || '';

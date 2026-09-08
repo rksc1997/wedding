@@ -65,31 +65,60 @@ Changes are live within a minute or so.
 - **What to wear** — that FAQ answer says "Details to follow."
 - **RSVP deadline** — `rsvp.deadline` in `js/config.js` is empty, so the
   "kindly respond by" line is hidden until you set it.
-- **The RSVP form isn't connected** (see below).
+- **The RSVP form needs its Google Form URL** (see below).
 
 ## Connecting the RSVP form
 
-Right now the form validates but tells guests to email instead of silently
-failing. Pick a backend and set it in `js/config.js`.
+The site is set to **Google Forms** (`rsvp.mode: 'google'` in
+`js/config.js`). One value is missing: the form's embed URL.
 
-**Google Forms — recommended.** Free, unlimited responses, answers land in a
-Sheet, and it can email you on each submission. Build the form, use
-**Send → `<>` (embed)**, copy the `src="..."` URL, then:
+### Create the form
+
+Run the script — it builds all nine questions to match the site, links a
+response spreadsheet, and prints the URL you need:
+
+1. Go to <https://script.google.com> and click **New project**.
+2. Paste in the contents of `tools/create-rsvp-form.gs`.
+3. Make sure the function dropdown reads `createRsvpForm`, then **Run**.
+   Authorise it when asked — it only touches what it creates.
+4. Open the execution log and copy the **EMBED URL**.
+
+Or build the form by hand and get the URL from **Send -> `<>` (embed)**.
+
+### Plug it in
+
+Paste it into `js/config.js`:
 
 ```js
-rsvp: { mode: 'google', googleFormEmbedUrl: 'https://docs.google.com/forms/d/e/…/viewform?embedded=true' }
+rsvp: {
+  mode: 'google',
+  googleFormEmbedUrl: 'https://docs.google.com/forms/d/e/1FAIpQL.../viewform?embedded=true',
+  ...
+}
 ```
 
-Your form replaces the built-in one.
+Then commit and push. The site's own form is replaced by the Google Form.
+`?embedded=true` is appended automatically if you leave it off.
 
-**Formspree — keeps this site's styled form.** Prettier, but the free tier
-caps at 50 submissions per month, which a wedding can exceed.
+Until that URL is set, the form validates and then tells guests to email
+instead, rather than silently swallowing an RSVP.
 
-```js
-rsvp: { mode: 'formspree', formspreeEndpoint: 'https://formspree.io/f/YOUR_ID' }
-```
+### To be emailed on each response
 
-Netlify Forms won't work here — it only works on Netlify.
+Open the responses spreadsheet, then **Tools -> Notification settings**.
+
+### Why not collect email addresses via Google?
+
+The script deliberately does not use `setCollectEmail()`. That forces
+respondents to sign in to a Google account, which would shut out guests who
+haven't got one. Email is an ordinary question instead.
+
+### The alternative
+
+Switching `mode` to `'formspree'` keeps this site's own styled form and
+posts to Formspree. Prettier, but the free tier caps at 50 submissions a
+month, which a wedding can exceed. Netlify Forms won't work here at all —
+it only works on Netlify.
 
 ---
 
@@ -125,6 +154,8 @@ images/
   engagement.jpeg   hero photograph
 robots.txt          asks crawlers to stay out
 .nojekyll           serve verbatim, no Jekyll
+tools/
+  create-rsvp-form.gs   one-off Apps Script that builds the RSVP form
 ```
 
 ## Notes

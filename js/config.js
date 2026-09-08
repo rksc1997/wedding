@@ -65,18 +65,27 @@ window.WEDDING_CONFIG = {
   ],
 
   /* --- RSVP -------------------------------------------------------------
-     Not connected yet. Until an endpoint is set the form tells guests to
-     email instead, rather than silently failing.
+     Set to Google Forms. ONE THING LEFT: paste the form's embed URL into
+     googleFormEmbedUrl below and push. Until then the form politely tells
+     guests to email instead, rather than silently failing.
 
-     'google'    — paste a Google Form embed URL into googleFormEmbedUrl.
-                   Free, unlimited responses, answers land in a Sheet.
-     'formspree' — paste your endpoint below. Keeps this styled form, but
-                   the free tier caps at 50 submissions a month.
+     To create the form, run tools/create-rsvp-form.gs once at
+     script.google.com — it builds all nine questions to match this site and
+     prints the embed URL. Or make the form by hand and use
+     Send -> <> (embed) to get the URL.
+
+     It should look like:
+       https://docs.google.com/forms/d/e/1FAIpQL.../viewform?embedded=true
+
+     (?embedded=true is added automatically if you leave it off.)
+
+     Switch mode to 'formspree' instead if you'd rather keep this site's own
+     styled form — but its free tier caps at 50 responses a month.
      -------------------------------------------------------------------- */
   rsvp: {
-    mode: 'formspree',
-    formspreeEndpoint: 'https://formspree.io/f/YOUR_FORM_ID',
+    mode: 'google',
     googleFormEmbedUrl: '',
+    formspreeEndpoint: 'https://formspree.io/f/YOUR_FORM_ID',
     deadline: ''
   },
 

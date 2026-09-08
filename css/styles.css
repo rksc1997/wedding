@@ -484,7 +484,20 @@ h1, h2, h3, h4 {
 .rsvp-thanks h3 { font-size: clamp(1.8rem, 5vw, 2.5rem); }
 .rsvp-thanks p { color: rgba(253,248,240,.75); max-width: 46ch; margin: 0 auto; }
 
-.google-embed { width: 100%; min-height: 900px; border: 0; border-radius: 4px; background: #fff; }
+/* Google Forms iframes can't report their own height, so this is a fixed
+   guess sized for the nine questions in tools/create-rsvp-form.gs. If the
+   form ends up with its own inner scrollbar, raise it. */
+.google-embed {
+  width: 100%;
+  min-height: 1250px;
+  border: 0;
+  border-radius: 4px;
+  background: #fff;
+  display: block;
+}
+@media (max-width: 620px) {
+  .google-embed { min-height: 1500px; }
+}
 
 /* ==========================================================================
    8. Footer
