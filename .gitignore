@@ -1,3 +1,12 @@
+# ---------------------------------------------------------------------------
+# The plaintext sources must NEVER be published. The repo is public, so
+# anything committed here is public permanently, including in git history.
+#
+# src/ holds the content AND the password, and is the only copy. It lives in
+# Dropbox. content.enc cannot be turned back into source, so don't delete it.
+# ---------------------------------------------------------------------------
+src/
+
 .claude/
 __pycache__/
 *.pyc

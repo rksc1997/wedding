@@ -1,0 +1,4 @@
+# content.enc must round-trip byte-for-byte. Without this, Git could decide
+# it is text and apply CRLF conversion, corrupting the ciphertext so it no
+# longer decrypts.
+*.enc binary

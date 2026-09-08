@@ -1,12 +1,15 @@
 /* ==========================================================================
-   app.js — renders the event cards and RSVP checkboxes from js/config.js,
-   and wires up the nav, FAQ and RSVP form.
+   app.js — everything that happens after the content is decrypted.
+
+   Exposes window.SITE.init(config). gate.js calls it once, immediately after
+   injecting the decrypted markup into #site. The event details arrive as an
+   argument rather than from a public config file, so nothing here leaks.
    ========================================================================== */
 
-(function () {
+window.SITE = (function () {
   'use strict';
 
-  var CFG = window.WEDDING_CONFIG || {};
+  var CFG = {};
 
   function esc(str) {
     return String(str == null ? '' : str)
@@ -257,20 +260,17 @@
     });
   }
 
-  /* =========================================================== init ===== */
+  /* ========================================================= public ===== */
 
-  function init() {
-    renderEvents();
-    renderRsvpEvents();
-    initNav();
-    initFaq();
-    initRsvp();
-    initReveal();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  return {
+    init: function (config) {
+      CFG = config || {};
+      renderEvents();
+      renderRsvpEvents();
+      initNav();
+      initFaq();
+      initRsvp();
+      initReveal();
+    }
+  };
 })();
